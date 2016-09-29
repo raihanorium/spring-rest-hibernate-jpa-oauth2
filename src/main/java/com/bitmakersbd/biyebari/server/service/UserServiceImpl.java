@@ -3,8 +3,6 @@ package com.bitmakersbd.biyebari.server.service;
 import com.bitmakersbd.biyebari.server.model.User;
 import com.bitmakersbd.biyebari.server.repository.UserRepository;
 import com.bitmakersbd.biyebari.server.util.*;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.text.MessageFormat;
 import java.util.Objects;
-import java.util.Random;
+import java.util.UUID;
 
 public class UserServiceImpl implements UserService {
     @Autowired
@@ -27,6 +25,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     SmsService smsService;
+
+    @Autowired
+    EmailService emailService;
 
     @Transactional(readOnly = true)
     @Override
@@ -43,11 +44,10 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public User create(User user) throws Exception {
-        if (StringUtils.isNotEmpty(user.getEmail())) {
-            if (isDuplicateEmail(user.getEmail())) {
-                throw new Exception(messages.getMessage("email.already.registered"));
-            }
+        if (isDuplicateEmail(user.getEmail())) {
+            throw new Exception(messages.getMessage("email.already.registered"));
         }
+
         if (isDuplicateContactNo(user.getContactNo())) {
             throw new Exception(messages.getMessage("contactNo.already.exists"));
         }
@@ -74,10 +74,8 @@ public class UserServiceImpl implements UserService {
         if (userInDb == null) throw new Exception(messages.getMessage("user.not.found"));
 
         // check for duplicate email.
-        if (StringUtils.isNotEmpty(user.getEmail())) {
-            if ((!user.getEmail().equals(userInDb.getEmail())) && isDuplicateEmail(user.getEmail())) {
-                throw new Exception(messages.getMessage("email.already.registered"));
-            }
+        if ((!user.getEmail().equals(userInDb.getEmail())) && isDuplicateEmail(user.getEmail())) {
+            throw new Exception(messages.getMessage("email.already.registered"));
         }
 
         // check for duplicate contact no.
@@ -171,6 +169,22 @@ public class UserServiceImpl implements UserService {
 
         userInDb.setPassword(newPassword);
         userRepository.save(userInDb);
+
+        return true;
+    }
+
+    @Override
+    public boolean resetPassword(String user) throws Exception {
+        User userInDb = userRepository.findOneByEmail(user);
+
+        if (userInDb == null) {
+            throw new Exception(messages.getMessage("user.not.found"));
+        }
+
+        String passwordToken = UUID.randomUUID().toString();
+        emailService.send(userInDb.getEmail(),
+                messages.getMessage("user.password.reset.mail.subject"),
+                MessageFormat.format(messages.getMessage("reset.password.email.template"), passwordToken));
 
         return true;
     }

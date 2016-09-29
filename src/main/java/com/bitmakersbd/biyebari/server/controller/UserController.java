@@ -1,6 +1,7 @@
 package com.bitmakersbd.biyebari.server.controller;
 
 import com.bitmakersbd.biyebari.server.model.User;
+import com.bitmakersbd.biyebari.server.service.EmailService;
 import com.bitmakersbd.biyebari.server.service.UserService;
 import com.bitmakersbd.biyebari.server.util.Messages;
 import com.bitmakersbd.biyebari.server.util.RestResponse;
@@ -37,6 +38,9 @@ public class UserController {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    EmailService emailService;
 
     @Autowired
     Messages messages;
@@ -233,6 +237,27 @@ public class UserController {
         }
         return restResponse;
     }
+
+    /**
+     * Reset user password and send password to user's email.
+     *
+     * @param email the email of the user
+     * @return the user object as {@link com.bitmakersbd.biyebari.server.util.RestResponse} if password is correct
+     */
+    @RequestMapping(value = "/resetPassword", method = RequestMethod.POST)
+    public RestResponse resetPassword(@RequestParam String email) {
+        // user is the email of the user
+        RestResponse restResponse = new RestResponse();
+        try {
+            restResponse.setData(userService.resetPassword(email));
+            restResponse.addMessage(messages.getMessage("user.password.reset.link.sent"));
+        } catch (Exception e) {
+            restResponse.setError(true);
+            restResponse.addMessage(e.getMessage());
+        }
+        return restResponse;
+    }
+
 
     /**
      * Generates a verification code

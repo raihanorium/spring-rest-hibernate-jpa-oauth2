@@ -10,6 +10,7 @@ import com.bitmakersbd.biyebari.server.validation.ValidateOnUpdate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.persistence.*;
@@ -27,6 +28,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
+    @Email(groups = {ValidateOnCreate.class, ValidateOnUpdate.class})
+    @NotEmpty(groups = {ValidateOnCreate.class, ValidateOnUpdate.class})
     @Column(length = 100)
     private String email;
 

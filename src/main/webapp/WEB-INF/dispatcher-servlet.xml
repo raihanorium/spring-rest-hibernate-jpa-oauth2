@@ -112,4 +112,5 @@
     <bean id="fileUploadService" class="com.bitmakersbd.biyebari.server.service.FileUploadServiceImpl"/>
     <bean id="applicationSettingsService" class="com.bitmakersbd.biyebari.server.service.ApplicationSettingsServiceImpl"/>
     <bean id="smsService" class="com.bitmakersbd.biyebari.server.service.SmsServiceImpl"/>
+    <bean id="emailService" class="com.bitmakersbd.biyebari.server.service.EmailServiceSmtp"/>
 </beans>

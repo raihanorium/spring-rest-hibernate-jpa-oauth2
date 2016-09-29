@@ -28,6 +28,8 @@ public interface UserService {
 
     boolean changePassword(Long userId, String oldPassword, String newPassword) throws Exception;
 
+    boolean resetPassword(String user) throws Exception;
+
     boolean sendVerificationCode(Long userId) throws Exception;
 
     User verifyCode(Long userId, Integer verificationCode) throws Exception;
