@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <context:component-scan base-package="com.bitmakersbd.biyebari.server"/>
+    <context:annotation-config/>
+    <context:property-placeholder location="classpath:jdbc.properties,classpath:appSettings.properties"/>
+
+    <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean"/>
+
+    <bean class="org.springframework.data.repository.support.DomainClassConverter">
+        <constructor-arg ref="conversionService"/>
+    </bean>
+
+    <mvc:annotation-driven conversion-service="conversionService">
+        <mvc:argument-resolvers>
+            <ref bean="sortResolver"/>
+            <ref bean="pageableResolver"/>
+        </mvc:argument-resolvers>
+    </mvc:annotation-driven>
+
+    <mvc:interceptors>
+        <bean class="com.bitmakersbd.biyebari.server.annotation.EnableLoggingInterceptor" />
+        <bean class="com.bitmakersbd.biyebari.server.annotation.RequireLoggedInUserInterceptor" />
+    </mvc:interceptors>
+
+    <!-- Enables swgger ui-->
+    <mvc:resources mapping="swagger-ui.html" location="classpath:/META-INF/resources/"/>
+    <mvc:resources mapping="/webjars/**" location="classpath:/META-INF/resources/webjars/"/>
+    <mvc:resources mapping="/images/**" location="classpath:/META-INF/resources/images/"/>
+    <!-- Include a swagger configuration-->
+    <bean name="/swaggerConfig" class="com.bitmakersbd.biyebari.server.util.ApplicationSwaggerConfig"/>
+
+    <bean id="sortResolver" class="org.springframework.data.web.SortHandlerMethodArgumentResolver"/>
+    <bean id="pageableResolver" class="org.springframework.data.web.PageableHandlerMethodArgumentResolver">
+        <constructor-arg ref="sortResolver"/>
+        <property name="oneIndexedParameters" value="true"/>
+        <property name="maxPageSize" value="${max.page.size}" />
+        <property name="fallbackPageable">
+            <bean class="org.springframework.data.domain.PageRequest">
+                <constructor-arg name="page" value="0"/>
+                <constructor-arg name="size" value="${default.page.size}"/>
+            </bean>
+        </property>
+    </bean>
+
+    <jpa:repositories base-package="com.bitmakersbd.biyebari.server.repository"/>
+
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!-- Create default configuration for Hibernate -->
+    <bean id="hibernateJpaVendorAdapter"
+          class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+
+    <!-- Configure the entity manager factory bean -->
+    <bean id="entityManagerFactory"
+          class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/>
+        <!-- Set JPA properties -->
+        <property name="jpaProperties">
+            <props>
+                <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+            </props>
+        </property>
+        <property name="packagesToScan" value="com.bitmakersbd.biyebari.server.model"/>
+    </bean>
+
+    <!-- Configure the transaction manager bean -->
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
+
+    <bean class="org.springframework.context.support.ResourceBundleMessageSource"
+          id="messageSource">
+        <property name="basenames">
+            <list>
+                <value>validationMessages</value>
+                <value>messages</value>
+                <value>appSettings</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver" />
+
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!--services-->
+    <bean id="userService" class="com.bitmakersbd.biyebari.server.service.UserServiceImpl"/>
+    <bean id="vendorService" class="com.bitmakersbd.biyebari.server.service.VendorServiceImpl"/>
+    <bean id="groupService" class="com.bitmakersbd.biyebari.server.service.GroupServiceImpl"/>
+    <bean id="categoryService" class="com.bitmakersbd.biyebari.server.service.CategoryServiceImpl"/>
+    <bean id="unitService" class="com.bitmakersbd.biyebari.server.service.UnitServiceImpl"/>
+    <bean id="itemService" class="com.bitmakersbd.biyebari.server.service.ItemServiceImpl"/>
+    <bean id="districtService" class="com.bitmakersbd.biyebari.server.service.DistrictServiceImpl"/>
+    <bean id="areaService" class="com.bitmakersbd.biyebari.server.service.AreaServiceImpl"/>
+    <bean id="fileUploadService" class="com.bitmakersbd.biyebari.server.service.FileUploadServiceImpl"/>
+    <bean id="applicationSettingsService" class="com.bitmakersbd.biyebari.server.service.ApplicationSettingsServiceImpl"/>
+    <bean id="smsService" class="com.bitmakersbd.biyebari.server.service.SmsServiceImpl"/>
+</beans>
